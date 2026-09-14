@@ -37,9 +37,26 @@ def check(label, quoted, derived, tol=5e-5, note=""):
         FAILURES.append(label)
 
 
+def manuscript_files():
+    """The .tex files main.tex actually inputs, plus main.tex itself.
+
+    This used to glob every .tex in the directory. When a section was retired from the
+    manuscript but left on disk, the presence checks below went on finding their strings in it
+    and reporting OK for text that no longer appears in the paper -- a check that cannot fail.
+    """
+    main = TEX / "main.tex"
+    files = [main]
+    for name in re.findall(r"\\input\{([^}]+)\}", main.read_text()):
+        f = (TEX / name)
+        f = f if f.suffix else f.with_suffix(".tex")
+        if f.exists() and f.resolve().is_relative_to(TEX.resolve()):
+            files.append(f)
+    return files
+
+
 def in_tex(pattern):
-    """Is this literal string present anywhere in the manuscript?"""
-    for f in TEX.glob("*.tex"):
+    """Is this literal string present anywhere in the manuscript as it is actually built?"""
+    for f in manuscript_files():
         if re.search(pattern, f.read_text()):
             return True
     return False
@@ -158,8 +175,12 @@ def main() -> int:
             FAILURES.append(label)
 
     print("\ncross-document consistency")
+    # "six of eleven at an endpoint" was checked here until 2026-09-14. The oracle-ceiling result
+    # moved into paper-plco-hypergraph and this paper was rebuilt around the simulation gap, so
+    # the endpoint tally is in neither manuscript: its argmax is not recoverable from
+    # oracle_ceiling_b.csv, so it was retired with sections-bound.tex rather than quoted
+    # unverified. Restore the check if that analysis is ever re-run and placed in a paper.
     for label, pat in (("eleven datasets, not eight", r"eleven real (tabular )?datasets"),
-                       ("six of eleven at an endpoint", r"six of the eleven"),
                        ("no stale 0.0086 / 0.0126 / 0.0039", r"0\.0086|0\.0126|0\.0039"),
                        # the abstract carried this until 2026-09-02, wrapped across a line, so the
                        # 'eleven' check above did not catch it
