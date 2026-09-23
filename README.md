@@ -1,8 +1,8 @@
-# The Ceiling of Learning on the Missingness Hypergraph
+# Coefficient Heterogeneity Is Not Predictive Heterogeneity, and Simulations of Pattern-Conditional Methods Assume It Is
 
 Code, pre-registrations, aggregate results and figures for the article of the same title
 (Vivatchai Kaveeta, Prompong Sugunnasil, Juggapong Natwichai, Chiang Mai University). Generated from the authors' research monorepo at
-commit `a545c42` on 2026-09-15 by `build_release.py`; the generator's verification step imported the
+commit `9fa2ce7` on 2026-09-23 by `build_release.py`; the generator's verification step imported the
 library and regenerated the tables and figures in this tree.
 
 ## Layout

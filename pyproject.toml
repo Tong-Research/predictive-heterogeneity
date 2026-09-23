@@ -2,7 +2,7 @@
 name = "hgmiss"
 version = "1.0.0"
 requires-python = ">=3.12"
-description = "Code for: The Ceiling of Learning on the Missingness Hypergraph"
+description = "Code for: Coefficient Heterogeneity Is Not Predictive Heterogeneity, and Simulations of Pattern-Conditional Methods Assume It Is"
 
 [build-system]
 requires = ["setuptools>=68"]
