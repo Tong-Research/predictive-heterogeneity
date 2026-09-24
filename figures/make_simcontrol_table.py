@@ -5,6 +5,8 @@ Nothing in the paper's control paragraph is typed by hand. Run from the paper di
 """
 import glob, pathlib, numpy as np, pandas as pd
 
+# a significant WIN needs a positive difference as well as p < 0.05; until 2026-09-23 these two
+# counted every p < 0.05 cell, losses included, and the text called that "significant wins"
 SRC = pathlib.Path(__file__).resolve().parents[1] / "results" / "simcontrol"
 OUT = pathlib.Path(__file__).resolve().parents[1] / "tables"
 
@@ -29,8 +31,8 @@ vals = [("ScCells", len(p)),
         ("ScSpreadHi", f"{sp.loc[hi,'pattern']:.4f}"),
         ("ScStdMean", f"{p.delta_vs_tuned_ind.mean():+.4f}"),
         ("ScStdMax", f"{p.delta_vs_tuned_ind.max():+.4f}"),
-        ("ScStdWins", int((p.p_vs_tuned_ind < 0.05).sum())),
-        ("ScCtrlWins", int((s.p_vs_tuned_ind < 0.05).sum())),
+        ("ScStdWins", int(((p.p_vs_tuned_ind < 0.05) & (p.delta_vs_tuned_ind > 0)).sum())),
+        ("ScCtrlWins", int(((s.p_vs_tuned_ind < 0.05) & (s.delta_vs_tuned_ind > 0)).sum())),
         ("ScCtrlMean", f"{s.delta_vs_tuned_ind.mean():+.4f}"),
         ("ScCtrlMax", f"{s.delta_vs_tuned_ind.max():+.4f}"),
         ("ScMarStd", f"{d[(d.mechanism=='MAR')&(d.het==hi)&(d.outcome_from=='pattern')].delta_vs_tuned_ind.mean():+.4f}"),

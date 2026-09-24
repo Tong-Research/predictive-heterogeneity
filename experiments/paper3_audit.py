@@ -27,6 +27,23 @@ FAILURES = []
 CHECKS = []          # every check that actually ran, so a silent no-op cannot pass
 
 
+# The paper's side of each check is read from the macros the paper prints, not typed here.
+# Until 2026-09-23 these were literals, and after SYNTHRERUN they described the old suite while
+# the paper already printed the new one.
+_PAPERS = pathlib.Path(__file__).resolve().parents[2]
+
+
+def paper_macro(name):
+    for f in [_PAPERS / "paper-oracle-bound" / "tables" / "regimes_counts.tex",
+              _PAPERS / "paper-plco-hypergraph" / "tables" / "synth_counts.tex",
+              _PAPERS / "paper-plco-hypergraph" / "tables" / "diagval_counts.tex"]:
+        if f.exists():
+            m = re.search(r"\\newcommand\{\\" + name + r"\}\{([^}]*)\}", f.read_text())
+            if m:
+                return float(m.group(1).replace("+", ""))
+    raise SystemExit(f"macro \\{name} not found; the paper does not print it")
+
+
 def check(label, quoted, derived, tol=5e-5, note=""):
     CHECKS.append(label)
     ok = derived is not None and abs(quoted - derived) <= tol
@@ -121,19 +138,20 @@ def main() -> int:
         sd = pd.read_csv(s)
         rd = pd.read_csv(r)
         print("\nsection 4 — simulation against real")
-        check("simulation mean gain", 0.0201, sd.delta_vs_tuned_ind.mean(), tol=6e-5)
-        check("simulation largest gain", 0.2496, sd.delta_vs_tuned_ind.max(), tol=6e-5)
+        check("simulation mean gain", paper_macro("RgSimMean"), sd.delta_vs_tuned_ind.mean(), tol=6e-5)
+        check("simulation largest gain", paper_macro("RgSimMax"), sd.delta_vs_tuned_ind.max(), tol=6e-5)
         check("real mean gain", -0.0009, rd.delta.mean(), tol=6e-5)
         check("real largest gain", 0.0005, rd.delta.max(), tol=6e-5)
         w = int(((sd.delta_vs_tuned_ind > 0) & (sd.p_vs_tuned_ind < 0.05)).sum())
         l = int(((sd.delta_vs_tuned_ind < 0) & (sd.p_vs_tuned_ind < 0.05)).sum())
-        print(f"  [{'ok  ' if w == 40 else 'FAIL'}] {'simulation significant wins':<46} paper 40"
+        pw, pl = int(paper_macro("RgSimWins")), int(paper_macro("SyLosses"))
+        print(f"  [{'ok  ' if w == pw else 'FAIL'}] {'simulation significant wins':<46} paper {pw}"
               f"            data {w}")
-        print(f"  [{'ok  ' if l == 2 else 'FAIL'}] {'simulation significant losses':<46} paper 2"
+        print(f"  [{'ok  ' if l == pl else 'FAIL'}] {'simulation significant losses':<46} paper {pl}"
               f"             data {l}")
-        if w != 40:
+        if w != pw:
             FAILURES.append("sim wins")
-        if l != 2:
+        if l != pl:
             FAILURES.append("sim losses")
         rw = int(((rd.delta > 0) & (rd.p < 0.05)).sum())
         rl = int(((rd.delta < 0) & (rd.p < 0.05)).sum())
@@ -151,8 +169,8 @@ def main() -> int:
         rho = stats.spearmanr(v.het_excess[msk], v.delta[msk])[0]
         rio = stats.spearmanr(v.iota[msk], v.delta[msk])[0]
         print("\nsection 5 — the diagnostic")
-        check("rho(het_excess, delta)", 0.505, rho, tol=5e-3)
-        check("rho(iota, delta), the weaker alternative", 0.281, rio, tol=5e-3)
+        check("rho(het_excess, delta)", paper_macro("DvRhoFine"), rho, tol=5e-3)
+        check("rho(iota, delta), the weaker alternative", paper_macro("DvIotaRho"), rio, tol=5e-3)
 
     # ---- claims that must be TEXT-consistent, not just numerically right
     # The figure's claim, which section 3 now states in the text: the real ceiling never
